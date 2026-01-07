@@ -7,7 +7,6 @@ import BenchmarkSection from "@/components/BenchmarkSection";
 import DashboardSection from "@/components/DashboardSection";
 import OptimizationSection from "@/components/OptimizationSection";
 import ResultsSection from "@/components/ResultsSection";
-import TeamSection from "@/components/TeamSection";
 
 const Index = () => {
   return (
@@ -21,7 +20,6 @@ const Index = () => {
       <DashboardSection />
       <OptimizationSection />
       <ResultsSection />
-      <TeamSection />
       
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-border/50">
