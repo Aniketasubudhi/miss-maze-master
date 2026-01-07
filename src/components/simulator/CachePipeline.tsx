@@ -245,13 +245,21 @@ const CacheBlock = ({
         highlightClass
       )}
       style={{
-        background: `linear-gradient(to bottom right, hsl(var(--${color}) / 0.2), hsl(var(--${color}) / 0.05))`,
-        borderColor: `hsl(var(--${color}) / 0.3)`,
+        background: color === 'cache-l1' ? `linear-gradient(to bottom right, hsl(var(--l1-cache) / 0.2), hsl(var(--l1-cache) / 0.05))` :
+                    color === 'cache-l2' ? `linear-gradient(to bottom right, hsl(var(--l2-cache) / 0.2), hsl(var(--l2-cache) / 0.05))` :
+                    `linear-gradient(to bottom right, hsl(var(--l3-cache) / 0.2), hsl(var(--l3-cache) / 0.05))`,
+        borderColor: color === 'cache-l1' ? `hsl(var(--l1-cache) / 0.3)` :
+                     color === 'cache-l2' ? `hsl(var(--l2-cache) / 0.3)` :
+                     `hsl(var(--l3-cache) / 0.3)`,
       }}
     >
       <Database 
         className={cn("w-8 h-8", sizeClasses[size])} 
-        style={{ color: `hsl(var(--${color}))` }}
+        style={{ 
+          color: color === 'cache-l1' ? `hsl(var(--l1-cache))` :
+                 color === 'cache-l2' ? `hsl(var(--l2-cache))` :
+                 `hsl(var(--l3-cache))` 
+        }}
       />
       <span className="font-bold text-sm">{label}</span>
       <span className="text-xs text-muted-foreground">{sublabel}</span>
