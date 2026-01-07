@@ -1,5 +1,6 @@
-import { Cpu, Database, Zap, BarChart3 } from "lucide-react";
+import { Cpu, Database, Zap, BarChart3, Play, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -51,11 +52,28 @@ const HeroSection = () => {
           <span className="text-accent font-medium">eBPF</span>
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: "0.4s" }}>
-          <Button variant="hero" size="xl" onClick={() => document.getElementById('concepts')?.scrollIntoView({ behavior: 'smooth' })}>
+        {/* Primary CTA - Simulator buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6 animate-slide-up" style={{ animationDelay: "0.4s" }}>
+          <Link to="/simulator">
+            <Button variant="hero" size="xl" className="w-full sm:w-auto">
+              <Play className="w-5 h-5 mr-2" />
+              Start Simulation
+            </Button>
+          </Link>
+          <Link to="/simulator">
+            <Button variant="glass" size="xl" className="w-full sm:w-auto">
+              <GraduationCap className="w-5 h-5 mr-2" />
+              Teaching Mode
+            </Button>
+          </Link>
+        </div>
+
+        {/* Secondary navigation */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center animate-slide-up" style={{ animationDelay: "0.5s" }}>
+          <Button variant="outline" size="lg" onClick={() => document.getElementById('concepts')?.scrollIntoView({ behavior: 'smooth' })}>
             Explore Cache Concepts
           </Button>
-          <Button variant="glass" size="xl" onClick={() => document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' })}>
+          <Button variant="outline" size="lg" onClick={() => document.getElementById('dashboard')?.scrollIntoView({ behavior: 'smooth' })}>
             View Dashboard
           </Button>
         </div>
