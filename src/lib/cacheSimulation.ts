@@ -77,9 +77,9 @@ export const CACHE_LATENCIES = {
 
 // Default cache configuration
 export const DEFAULT_CONFIG: CacheConfig = {
-  l1Size: 8,
-  l2Size: 32,
-  l3Size: 128,
+  l1Size: 16,
+  l2Size: 64,
+  l3Size: 256,
   lineSize: 64,
 };
 
@@ -184,8 +184,8 @@ export class AccessPatternGenerator {
 
     switch (pattern) {
       case 'sequential':
-        // Sequential access - best for cache
-        blockId = this.index % this.datasetSize;
+        // Sequential access - best for cache, use smaller working set for visible hits
+        blockId = this.index % Math.min(this.datasetSize, 32);
         this.index++;
         break;
 
