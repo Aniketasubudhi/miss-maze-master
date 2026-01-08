@@ -67,11 +67,13 @@ const CacheSimulatorPage = () => {
   // Initialize simulator
   useEffect(() => {
     const size = datasetSize === "small" ? 64 : datasetSize === "medium" ? 256 : 1024;
-    simulatorRef.current = new CacheSimulator(
-      { l1Size, l2Size, l3Size, lineSize: 64 },
-      size
-    );
-  }, []);
+    if (!simulatorRef.current) {
+      simulatorRef.current = new CacheSimulator(
+        { l1Size, l2Size, l3Size, lineSize: 64 },
+        size
+      );
+    }
+  }, [l1Size, l2Size, l3Size, datasetSize]);
 
   // Update simulator config when settings change
   useEffect(() => {
