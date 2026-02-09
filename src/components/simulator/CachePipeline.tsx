@@ -194,6 +194,40 @@ const CachePipeline = ({
             }}
             className="absolute flex flex-col items-center gap-1"
           >
+            {/* Trail particles */}
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={i}
+                className={cn(
+                  "absolute w-2 h-2 rounded-full",
+                  isHit ? "bg-green-500" : "bg-red-500"
+                )}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{
+                  opacity: [0, 0.6, 0],
+                  scale: [0.3, 1, 0.2],
+                  x: -(i + 1) * 14,
+                  y: [0, (i % 2 === 0 ? -3 : 3), 0],
+                }}
+                transition={{
+                  duration: 0.6,
+                  delay: i * 0.06,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                }}
+                style={{ filter: `blur(${i * 0.5 + 1}px)` }}
+              />
+            ))}
+            {/* Trail glow line */}
+            <motion.div
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 h-1 rounded-full right-full",
+                isHit ? "bg-gradient-to-l from-green-500/60 to-transparent" : "bg-gradient-to-l from-red-500/60 to-transparent"
+              )}
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 60, opacity: [0, 0.8, 0.4] }}
+              transition={{ duration: 0.5, repeat: Infinity, ease: "easeOut" }}
+            />
             {/* Envelope icon */}
             <motion.div
               className={cn(
