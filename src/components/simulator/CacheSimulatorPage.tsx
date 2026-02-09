@@ -63,6 +63,7 @@ const CacheSimulatorPage = () => {
   // Simulator instance
   const simulatorRef = useRef<CacheSimulator | null>(null);
   const animationRef = useRef<number | null>(null);
+  const cancelRef = useRef(false);
 
   // Initialize simulator
   useEffect(() => {
@@ -91,7 +92,7 @@ const CacheSimulatorPage = () => {
 
   // Perform a single access step
   const performStep = useCallback(async () => {
-    if (!simulatorRef.current) return;
+    if (!simulatorRef.current || cancelRef.current) return;
 
     setIsProcessing(true);
     const result = simulatorRef.current.access(pattern, optimized);
@@ -102,6 +103,7 @@ const CacheSimulatorPage = () => {
     const hitIndex = levels.indexOf(result.hitLevel);
 
     for (let i = 0; i <= hitIndex; i++) {
+      if (cancelRef.current) return;
       setActiveLevel(levels[i]);
       setIsHit(i === hitIndex && result.isHit);
       
@@ -109,6 +111,8 @@ const CacheSimulatorPage = () => {
       const baseDelay = i === 3 ? 600 : i === 2 ? 200 : i === 1 ? 100 : 50;
       await new Promise((resolve) => setTimeout(resolve, baseDelay / speed));
     }
+
+    if (cancelRef.current) return;
 
     // Update cache state visualization
     const state = simulatorRef.current.getCacheState();
@@ -123,6 +127,7 @@ const CacheSimulatorPage = () => {
 
     // Small delay before next access
     await new Promise((resolve) => setTimeout(resolve, 100 / speed));
+    if (cancelRef.current) return;
     setIsProcessing(false);
     setActiveLevel(null);
     setCurrentBlockId(null);
@@ -131,16 +136,14 @@ const CacheSimulatorPage = () => {
   // Auto-play loop
   useEffect(() => {
     if (!isPlaying) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
       return;
     }
 
-    let isCancelled = false;
+    cancelRef.current = false;
+    let stopped = false;
 
     const runLoop = async () => {
-      while (!isCancelled && isPlaying) {
+      while (!stopped && !cancelRef.current) {
         await performStep();
       }
     };
@@ -148,34 +151,40 @@ const CacheSimulatorPage = () => {
     runLoop();
 
     return () => {
-      isCancelled = true;
+      stopped = true;
     };
   }, [isPlaying, performStep]);
 
   // Reset simulation
   const handleReset = () => {
+    cancelRef.current = true;
     setIsPlaying(false);
     if (simulatorRef.current) {
       simulatorRef.current.reset();
     }
-    setMetrics({
-      totalAccesses: 0,
-      l1Hits: 0,
-      l1Misses: 0,
-      l2Hits: 0,
-      l2Misses: 0,
-      l3Hits: 0,
-      l3Misses: 0,
-      ramAccesses: 0,
-      missRate: 0,
-      cpi: 1.0,
-    });
-    setMetricsHistory([]);
-    setL1Blocks([]);
-    setL2Blocks([]);
-    setL3Blocks([]);
-    setActiveLevel(null);
-    setIsProcessing(false);
+    // Use setTimeout to let the loop exit before clearing state
+    setTimeout(() => {
+      setMetrics({
+        totalAccesses: 0,
+        l1Hits: 0,
+        l1Misses: 0,
+        l2Hits: 0,
+        l2Misses: 0,
+        l3Hits: 0,
+        l3Misses: 0,
+        ramAccesses: 0,
+        missRate: 0,
+        cpi: 1.0,
+      });
+      setMetricsHistory([]);
+      setL1Blocks([]);
+      setL2Blocks([]);
+      setL3Blocks([]);
+      setActiveLevel(null);
+      setIsProcessing(false);
+      setCurrentBlockId(null);
+      cancelRef.current = false;
+    }, 50);
   };
 
   const handleCacheSizeChange = (level: "l1" | "l2" | "l3", size: number) => {

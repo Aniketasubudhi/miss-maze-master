@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Cpu, Database, HardDrive, Loader2, Check, X } from "lucide-react";
+import { Cpu, Database, HardDrive, Loader2, Check, X, Mail } from "lucide-react";
 import { CacheLevel, CACHE_LATENCIES } from "@/lib/cacheSimulation";
 import { cn } from "@/lib/utils";
 
@@ -172,44 +172,64 @@ const CachePipeline = ({
         </motion.div>
       </div>
 
-      {/* Animated data block */}
+      {/* Animated envelope traveling through pipeline */}
       <AnimatePresence mode="wait">
         {isProcessing && currentBlockId !== null && (
           <motion.div
             key={`${currentBlockId}-${activeLevel}`}
-            initial={{ x: 50, y: 120, opacity: 0, scale: 0 }}
+            initial={{ x: 50, y: 130, opacity: 0, scale: 0.5 }}
             animate={{ 
               x: getBlockPosition(activeLevel).x + 50, 
-              y: 120,
+              y: 130,
               opacity: 1, 
-              scale: 1 
+              scale: 1,
+              rotate: [0, -5, 5, 0],
             }}
-            exit={{ opacity: 0, scale: 0, transition: { duration: 0.15 } }}
+            exit={{ opacity: 0, scale: 0.3, y: 100, transition: { duration: 0.2 } }}
             transition={{ 
-              duration: activeLevel === 'RAM' ? 1.2 : 0.35,
+              duration: activeLevel === 'RAM' ? 1.2 : 0.4,
               ease: [0.25, 0.46, 0.45, 0.94],
+              rotate: { duration: 0.4, ease: "easeInOut" },
               scale: { type: "spring", stiffness: 300, damping: 20 }
             }}
-            className={cn(
-              "absolute w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-shadow duration-300",
-              isHit 
-                ? "bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.5)]" 
-                : "bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]"
-            )}
+            className="absolute flex flex-col items-center gap-1"
           >
-            {currentBlockId}
+            {/* Envelope icon */}
             <motion.div
-              className="absolute -top-1 -right-1"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.15, type: "spring", stiffness: 500, damping: 15 }}
-            >
-              {isHit ? (
-                <Check className="w-4 h-4 bg-green-600 rounded-full p-0.5" />
-              ) : (
-                <X className="w-4 h-4 bg-red-600 rounded-full p-0.5" />
+              className={cn(
+                "relative w-12 h-12 rounded-xl flex items-center justify-center",
+                isHit 
+                  ? "bg-green-500/90 shadow-[0_0_24px_rgba(34,197,94,0.6)]" 
+                  : "bg-red-500/90 shadow-[0_0_24px_rgba(239,68,68,0.6)]"
               )}
+              animate={isHit 
+                ? { boxShadow: ["0 0 12px rgba(34,197,94,0.3)", "0 0 28px rgba(34,197,94,0.7)", "0 0 12px rgba(34,197,94,0.3)"] }
+                : { boxShadow: ["0 0 12px rgba(239,68,68,0.3)", "0 0 28px rgba(239,68,68,0.7)", "0 0 12px rgba(239,68,68,0.3)"] }
+              }
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              <Mail className="w-6 h-6 text-white" />
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 500, damping: 15 }}
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-foreground text-background text-[9px] font-bold flex items-center justify-center"
+              >
+                {currentBlockId}
+              </motion.span>
             </motion.div>
+            {/* Hit/Miss label */}
+            <motion.span
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className={cn(
+                "text-[10px] font-bold uppercase tracking-wider",
+                isHit ? "text-green-400" : "text-red-400"
+              )}
+            >
+              {isHit ? "HIT" : "MISS"}
+            </motion.span>
           </motion.div>
         )}
       </AnimatePresence>
