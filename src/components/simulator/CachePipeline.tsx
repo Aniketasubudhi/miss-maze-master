@@ -173,9 +173,10 @@ const CachePipeline = ({
       </div>
 
       {/* Animated data block */}
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isProcessing && currentBlockId !== null && (
           <motion.div
+            key={`${currentBlockId}-${activeLevel}`}
             initial={{ x: 50, y: 120, opacity: 0, scale: 0 }}
             animate={{ 
               x: getBlockPosition(activeLevel).x + 50, 
@@ -183,24 +184,32 @@ const CachePipeline = ({
               opacity: 1, 
               scale: 1 
             }}
-            exit={{ opacity: 0, scale: 0 }}
+            exit={{ opacity: 0, scale: 0, transition: { duration: 0.15 } }}
             transition={{ 
-              duration: activeLevel === 'RAM' ? 1.5 : 0.4,
-              ease: "easeInOut"
+              duration: activeLevel === 'RAM' ? 1.2 : 0.35,
+              ease: [0.25, 0.46, 0.45, 0.94],
+              scale: { type: "spring", stiffness: 300, damping: 20 }
             }}
             className={cn(
-              "absolute w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold shadow-lg",
+              "absolute w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold transition-shadow duration-300",
               isHit 
-                ? "bg-green-500 text-white" 
-                : "bg-red-500 text-white"
+                ? "bg-green-500 text-white shadow-[0_0_20px_rgba(34,197,94,0.5)]" 
+                : "bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]"
             )}
           >
             {currentBlockId}
-            {isHit ? (
-              <Check className="absolute -top-1 -right-1 w-4 h-4 bg-green-600 rounded-full p-0.5" />
-            ) : (
-              <X className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full p-0.5" />
-            )}
+            <motion.div
+              className="absolute -top-1 -right-1"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.15, type: "spring", stiffness: 500, damping: 15 }}
+            >
+              {isHit ? (
+                <Check className="w-4 h-4 bg-green-600 rounded-full p-0.5" />
+              ) : (
+                <X className="w-4 h-4 bg-red-600 rounded-full p-0.5" />
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -267,13 +276,16 @@ const CacheBlock = ({
     large: "w-28",
   };
 
-  return (
+   return (
     <motion.div
       className={cn(
-        "relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all duration-300",
+        "relative flex flex-col items-center gap-2 p-4 rounded-2xl border cache-block-wrapper",
         `bg-gradient-to-br from-${color}/20 to-${color}/5 border-${color}/30`,
-        highlightClass
+        highlightClass,
+        isActive && (isHit ? "animate-hit-pulse" : "animate-miss-pulse")
       )}
+      animate={isActive ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+      transition={{ duration: 0.35, ease: "easeInOut" }}
       style={{
         background: color === 'cache-l1' ? `linear-gradient(to bottom right, hsl(var(--l1-cache) / 0.2), hsl(var(--l1-cache) / 0.05))` :
                     color === 'cache-l2' ? `linear-gradient(to bottom right, hsl(var(--l2-cache) / 0.2), hsl(var(--l2-cache) / 0.05))` :
@@ -298,12 +310,18 @@ const CacheBlock = ({
       <div className="w-full mt-1">
         <div className="flex items-center justify-between text-[10px] mb-0.5">
           <span className="text-muted-foreground">Hit Rate</span>
-          <span className={cn(
-            "font-bold",
-            hitRate >= 70 ? "text-green-500" : hitRate >= 40 ? "text-yellow-500" : "text-red-500"
-          )}>
+          <motion.span
+            key={hitRate.toFixed(1)}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className={cn(
+              "font-bold",
+              hitRate >= 70 ? "text-green-500" : hitRate >= 40 ? "text-yellow-500" : "text-red-500"
+            )}
+          >
             {hitRate.toFixed(1)}%
-          </span>
+          </motion.span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-muted/50 overflow-hidden">
           <motion.div
@@ -313,7 +331,7 @@ const CacheBlock = ({
             )}
             initial={{ width: 0 }}
             animate={{ width: `${hitRate}%` }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           />
         </div>
       </div>
@@ -322,12 +340,17 @@ const CacheBlock = ({
       <div className="flex flex-wrap gap-1 justify-center max-w-full mt-2">
         {blocks.slice(0, size === 'small' ? 4 : size === 'medium' ? 6 : 8).map((block, i) => (
           <motion.div
-            key={`${level}-${i}`}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
+            key={`${level}-${i}-${block}`}
+            initial={{ scale: 0.7, opacity: 0.3 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ 
+              duration: 0.3, 
+              ease: [0.34, 1.56, 0.64, 1],
+              delay: i * 0.03 
+            }}
             className={cn(
               "w-5 h-5 rounded text-[8px] flex items-center justify-center font-mono",
-              "bg-foreground/10 border border-foreground/20"
+              "bg-foreground/10 border border-foreground/20 transition-colors duration-300"
             )}
           >
             {block}
@@ -339,12 +362,13 @@ const CacheBlock = ({
       <AnimatePresence>
         {isActive && (
           <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
+            initial={{ scale: 0, opacity: 0, rotate: -90 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            exit={{ scale: 0, opacity: 0, rotate: 90 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
             className={cn(
               "absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center",
-              isHit ? "bg-green-500" : "bg-red-500"
+              isHit ? "bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.5)]" : "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]"
             )}
           >
             {isHit ? (
@@ -361,23 +385,33 @@ const CacheBlock = ({
 
 // Connection arrow component
 const ConnectionArrow = ({ active, slow }: { active: boolean; slow?: boolean }) => (
-  <div className="relative flex-1 h-2 min-w-[30px]">
-    <div className="absolute inset-0 bg-muted/50 rounded-full" />
-    {active && (
-      <motion.div
-        initial={{ x: "-100%" }}
-        animate={{ x: "100%" }}
-        transition={{ 
-          duration: slow ? 1.2 : 0.4, 
-          repeat: Infinity,
-          ease: "linear" 
-        }}
-        className={cn(
-          "absolute inset-y-0 w-1/3 rounded-full",
-          slow ? "bg-orange-500" : "bg-primary"
-        )}
-      />
-    )}
+  <div className="relative flex-1 h-2 min-w-[30px] overflow-hidden">
+    <div className="absolute inset-0 bg-muted/50 rounded-full transition-colors duration-300" />
+    <AnimatePresence>
+      {active && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0"
+        >
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: "100%" }}
+            transition={{ 
+              duration: slow ? 1.2 : 0.4, 
+              repeat: Infinity,
+              ease: "linear" 
+            }}
+            className={cn(
+              "absolute inset-y-0 w-1/3 rounded-full",
+              slow ? "bg-orange-500" : "bg-primary"
+            )}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
 );
 
