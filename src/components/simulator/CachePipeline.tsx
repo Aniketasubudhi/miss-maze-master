@@ -11,6 +11,11 @@ interface CachePipelineProps {
   l1Blocks: number[];
   l2Blocks: number[];
   l3Blocks: number[];
+  l1HitRate?: number;
+  l2HitRate?: number;
+  l3HitRate?: number;
+  totalAccesses?: number;
+  onReset?: () => void;
 }
 
 const CachePipeline = ({
@@ -21,6 +26,11 @@ const CachePipeline = ({
   l1Blocks,
   l2Blocks,
   l3Blocks,
+  l1HitRate = 0,
+  l2HitRate = 0,
+  l3HitRate = 0,
+  totalAccesses = 0,
+  onReset,
 }: CachePipelineProps) => {
   // Determine which level is active for highlighting
   const getHighlightClass = (level: CacheLevel) => {
@@ -101,6 +111,7 @@ const CachePipeline = ({
           isHit={activeLevel === 'L1' && isHit}
           highlightClass={getHighlightClass('L1')}
           color="cache-l1"
+          hitRate={l1HitRate}
         />
 
         <ConnectionArrow active={isProcessing && activeLevel !== 'L1'} />
@@ -116,6 +127,7 @@ const CachePipeline = ({
           isHit={activeLevel === 'L2' && isHit}
           highlightClass={getHighlightClass('L2')}
           color="cache-l2"
+          hitRate={l2HitRate}
         />
 
         <ConnectionArrow active={isProcessing && !['L1', 'L2'].includes(activeLevel || '')} />
@@ -131,6 +143,7 @@ const CachePipeline = ({
           isHit={activeLevel === 'L3' && isHit}
           highlightClass={getHighlightClass('L3')}
           color="cache-l3"
+          hitRate={l3HitRate}
         />
 
         <ConnectionArrow active={isProcessing && activeLevel === 'RAM'} slow />
@@ -192,16 +205,31 @@ const CachePipeline = ({
         )}
       </AnimatePresence>
 
-      {/* Legend */}
-      <div className="flex items-center justify-center gap-6 mt-8 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500" />
-          <span className="text-muted-foreground">Cache Hit (Fast)</span>
+      {/* Legend and Reset */}
+      <div className="flex items-center justify-between mt-8">
+        <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-green-500" />
+            <span className="text-muted-foreground">Cache Hit (Fast)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-red-500" />
+            <span className="text-muted-foreground">Cache Miss (Slow)</span>
+          </div>
+          {totalAccesses > 0 && (
+            <span className="text-sm font-medium text-muted-foreground">
+              Total: {totalAccesses} accesses
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-500" />
-          <span className="text-muted-foreground">Cache Miss (Slow)</span>
-        </div>
+        {onReset && (
+          <button
+            onClick={onReset}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30 transition-colors"
+          >
+            Reset
+          </button>
+        )}
       </div>
     </div>
   );
@@ -218,6 +246,7 @@ interface CacheBlockProps {
   isHit: boolean;
   highlightClass: string;
   color: string;
+  hitRate?: number;
 }
 
 const CacheBlock = ({ 
@@ -229,7 +258,8 @@ const CacheBlock = ({
   isActive, 
   isHit, 
   highlightClass,
-  color 
+  color,
+  hitRate = 0,
 }: CacheBlockProps) => {
   const sizeClasses = {
     small: "w-20",
@@ -263,6 +293,30 @@ const CacheBlock = ({
       />
       <span className="font-bold text-sm">{label}</span>
       <span className="text-xs text-muted-foreground">{sublabel}</span>
+      
+      {/* Hit rate indicator */}
+      <div className="w-full mt-1">
+        <div className="flex items-center justify-between text-[10px] mb-0.5">
+          <span className="text-muted-foreground">Hit Rate</span>
+          <span className={cn(
+            "font-bold",
+            hitRate >= 70 ? "text-green-500" : hitRate >= 40 ? "text-yellow-500" : "text-red-500"
+          )}>
+            {hitRate.toFixed(1)}%
+          </span>
+        </div>
+        <div className="w-full h-1.5 rounded-full bg-muted/50 overflow-hidden">
+          <motion.div
+            className={cn(
+              "h-full rounded-full",
+              hitRate >= 70 ? "bg-green-500" : hitRate >= 40 ? "bg-yellow-500" : "bg-red-500"
+            )}
+            initial={{ width: 0 }}
+            animate={{ width: `${hitRate}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      </div>
       
       {/* Mini cache blocks visualization */}
       <div className="flex flex-wrap gap-1 justify-center max-w-full mt-2">
