@@ -251,6 +251,11 @@ const CacheSimulatorPage = () => {
               l1Blocks={l1Blocks}
               l2Blocks={l2Blocks}
               l3Blocks={l3Blocks}
+              l1HitRate={metrics.totalAccesses > 0 ? (metrics.l1Hits / metrics.totalAccesses) * 100 : 0}
+              l2HitRate={metrics.totalAccesses > 0 ? (metrics.l2Hits / metrics.totalAccesses) * 100 : 0}
+              l3HitRate={metrics.totalAccesses > 0 ? (metrics.l3Hits / metrics.totalAccesses) * 100 : 0}
+              totalAccesses={metrics.totalAccesses}
+              onReset={handleReset}
             />
           </div>
 
